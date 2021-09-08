@@ -1,0 +1,20 @@
+{
+  "name": "media-player-for-crazy-people",
+  "version": "1.0.0",
+  "description": "The Media Player for me",
+  "main": "main.js",
+  "author": "ME",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^14.0.0"
+  },
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "esm": "^3.2.25",
+    "lowdb": "^2.1.0",
+    "music-metadata": "^7.11.4",
+    "uuid": "^8.3.2"
+  }
+}
