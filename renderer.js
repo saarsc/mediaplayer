@@ -1,5 +1,6 @@
 window.api.receive("add-song-to-list", (song) => {
   const songWrapper = document.createElement("li");
+  songWrapper.classList = ["songWrapper"];
 
   songWrapper.id = song.id;
   const coverImage = document.createElement("img");
@@ -19,6 +20,10 @@ window.api.receive("add-song-to-list", (song) => {
   songDetailsWrapper.appendChild(songArtist);
 
   songWrapper.appendChild(songDetailsWrapper);
-
+  songWrapper.addEventListener("click", () => {
+    var audio = new Audio(song.path);
+    audio.play();
+  });
   document.getElementById("songs-list").appendChild(songWrapper);
 });
+const $ = document.querySelectorAll;

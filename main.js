@@ -1,4 +1,12 @@
+` TODO
+  --------------
+  1) albums DB which stores id, cover, artist, general info
+  2) songs DB with (song name, id and album id which points to the album DB, lyrics?)
+  3) ASYNC the file playing 
+  4) UI UI UI 
+  5) Spotify integration
 
+`;
 const { app, BrowserWindow, dialog } = require("electron");
 const fs = require("fs");
 
@@ -7,7 +15,19 @@ const path = require("path");
 const mm = require("music-metadata");
 const uuid = require("uuid");
 
-const { Low, JSONFile } = require("esm")(module)("lowdb");
+const BaseDB = require("dbd.db");
+const sharp = require("sharp");
+
+let win;
+
+const DB = BaseDB("database");
+
+const SONGS_TABLE = DB.collection({
+  name: "Songs",
+});
+const ALBUMS_TABLE = BaseDB("albums").collection({
+  name: "Albums",
+});
 
 async function* listFiles(dir) {
   const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
@@ -23,32 +43,46 @@ async function* listFiles(dir) {
     }
   }
 }
+let songList = [];
+const SONG_LIST_PATH = path.join(__dirname, `songsList.json`);
 
-const writeToDB = async (song) => {
-  const file = join(__dirname, "db.json");
-  const adapter = new JSONFile(file);
-  const db = new Low(adapter);
-
-  await db.read();
-
-  db.data ||= {
-    title: [],
-    artist: [],
-    album: [],
-    id: [],
-    cover: [],
-    date: [],
-    path: [],
-    spotifyId: [],
-  };
-  if (!db.data.path.find((path) => song.path === path)) {
-    db.data.push(song);
-    db.write();
+fs.access(SONG_LIST_PATH, (err) => {
+  if (!err) {
+    songList = JSON.parse(fs.readFileSync(SONG_LIST_PATH));
+    return;
   }
+});
+
+const writeToDB = async (song, cover) => {
+  if (!(await SONGS_TABLE.findOne({ path: song.path }))) {
+    let album_cover = await ALBUMS_TABLE.findOne({
+      name: song.album,
+      artist: song.artist,
+    }).cover;
+    if (!album_cover) {
+      album_cover = await Buffer.from(
+        await sharp(cover).resize(40).toBuffer()
+      ).toString("base64");
+      const new_album = {
+        artist: song.artist,
+        name: song.album,
+        cover: album_cover,
+      };
+
+      await ALBUMS_TABLE.set(new_album)
+        .then(() => console.log("test"))
+        .catch((err) => console.error(err));
+    }
+    await SONGS_TABLE.set(song);
+    song.cover = album_cover;
+    win.webContents.send("add-song-to-list", song);
+  }
+  // songList.push(song);
+  // fs.writeFileSync(JSON.stringify(songList));
 };
 
 app.whenReady().then(() => {
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -69,13 +103,11 @@ app.whenReady().then(() => {
             artist: metadata.common.artist,
             album: metadata.common.album,
             id: uuid.v4(),
-            cover: metadata.common.picture[0].data.toString("base64"),
             date: metadata.common.date,
             path: f,
             spotifyId: "",
           };
-          writeToDB(song);
-          win.webContents.send("add-song-to-list", song);
+          writeToDB(song, metadata.common.picture[0].data);
         });
       }
     })();

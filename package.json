@@ -6,15 +6,16 @@
   "author": "ME",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^14.0.0"
+    "electron-nightly": "^16.0.0-nightly.20210907"
   },
   "scripts": {
     "start": "electron ."
   },
   "dependencies": {
+    "dbd.db": "^1.4.5",
     "esm": "^3.2.25",
-    "lowdb": "^2.1.0",
     "music-metadata": "^7.11.4",
+    "sharp": "^0.29.1",
     "uuid": "^8.3.2"
   }
 }
