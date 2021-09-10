@@ -20,13 +20,45 @@ const sharp = require("sharp");
 
 let win;
 
-const DB = BaseDB("database");
-
-const SONGS_TABLE = DB.collection({
-  name: "Songs",
+const knex = require("knex")({
+  client: "sqlite3",
+  connection: {
+    filename: "./data.db",
+  },
+  debug: true,
 });
-const ALBUMS_TABLE = BaseDB("albums").collection({
-  name: "Albums",
+
+// const DB = BaseDB("database");
+
+// const SONGS_TABLE = DB.collection({
+//   name: "Songs",
+// });
+// const ALBUMS_TABLE = BaseDB("albums").collection({
+//   name: "Albums",
+// });
+knex.schema.hasTable("songs").then((exsits) => {
+  if (!exsits) {
+    return knex.schema.createTable("songs", (t) => {
+      t.increments("primkey").primary(),
+        t.string("title"),
+        t.string("artist"),
+        t.string("album"),
+        t.string("id"),
+        t.date("date"),
+        t.string("path"),
+        t.string("spotify_id");
+    });
+  }
+});
+knex.schema.hasTable("albums").then((exsits) => {
+  if (!exsits) {
+    return knex.schema.createTable("albums", (t) => {
+      t.increments("id").primary(),
+        t.string("name"),
+        t.string("artist"),
+        t.string("cover");
+    });
+  }
 });
 
 async function* listFiles(dir) {
@@ -43,23 +75,16 @@ async function* listFiles(dir) {
     }
   }
 }
-let songList = [];
-const SONG_LIST_PATH = path.join(__dirname, `songsList.json`);
-
-fs.access(SONG_LIST_PATH, (err) => {
-  if (!err) {
-    songList = JSON.parse(fs.readFileSync(SONG_LIST_PATH));
-    return;
-  }
-});
 
 const writeToDB = async (song, cover) => {
-  if (!(await SONGS_TABLE.findOne({ path: song.path }))) {
-    let album_cover = await ALBUMS_TABLE.findOne({
-      name: song.album,
-      artist: song.artist,
-    }).cover;
-    if (!album_cover) {
+  if (!knex("songs").where({ path: song.path })._eventsCount) {
+    let album_cover = knex("albums")
+      .where({
+        artist: song.artist,
+        name: song.album,
+      })
+      .select("cover");
+    if (!album_cover._eventsCount) {
       album_cover = await Buffer.from(
         await sharp(cover).resize(40).toBuffer()
       ).toString("base64");
@@ -68,17 +93,37 @@ const writeToDB = async (song, cover) => {
         name: song.album,
         cover: album_cover,
       };
-
-      await ALBUMS_TABLE.set(new_album)
-        .then(() => console.log("test"))
-        .catch((err) => console.error(err));
+      await knex("albums").insert(new_album);
     }
-    await SONGS_TABLE.set(song);
+    await knex("songs").insert(song);
     song.cover = album_cover;
     win.webContents.send("add-song-to-list", song);
+  } else {
+    console.log(song.title);
   }
-  // songList.push(song);
-  // fs.writeFileSync(JSON.stringify(songList));
+  // if (!(await SONGS_TABLE.findOne({ path: song.path }))) {
+  //   let album_cover = await ALBUMS_TABLE.findOne({
+  //     name: song.album,
+  //     artist: song.artist,
+  //   }).cover;
+  //   if (!album_cover) {
+  //     album_cover = await Buffer.from(
+  //       await sharp(cover).resize(40).toBuffer()
+  //     ).toString("base64");
+  //     const new_album = {
+  //       artist: song.artist,
+  //       name: song.album,
+  //       cover: album_cover,
+  //     };
+
+  //     await ALBUMS_TABLE.set(new_album)
+  //       .then(() => console.log("test"))
+  //       .catch((err) => console.error(err));
+  //   }
+  //   await SONGS_TABLE.set(song);
+  //   song.cover = album_cover;
+  //   win.webContents.send("add-song-to-list", song);
+  // }
 };
 
 app.whenReady().then(() => {
@@ -105,7 +150,7 @@ app.whenReady().then(() => {
             id: uuid.v4(),
             date: metadata.common.date,
             path: f,
-            spotifyId: "",
+            spotify_id: "",
           };
           writeToDB(song, metadata.common.picture[0].data);
         });
