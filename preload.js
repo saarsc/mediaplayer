@@ -7,7 +7,7 @@ window.addEventListener("DOMContentLoaded", () => {
 contextBridge.exposeInMainWorld("api", {
   send: (channel, data) => {
     // whitelist channels
-    let validChannels = ["toMain"];
+    let validChannels = ["add-path"];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
     }

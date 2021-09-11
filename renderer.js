@@ -1,4 +1,7 @@
 window.api.receive("add-song-to-list", (song) => {
+  if (typeof song.cover !== "string") {
+    console.log(song.cover);
+  }
   const songWrapper = document.createElement("li");
   songWrapper.classList = ["songWrapper"];
 
@@ -27,3 +30,6 @@ window.api.receive("add-song-to-list", (song) => {
   document.getElementById("songs-list").appendChild(songWrapper);
 });
 const $ = document.querySelectorAll;
+document.getElementById("add-path").onclick = () => {
+  window.api.send("add-path");
+};

@@ -12,11 +12,12 @@
     "start": "electron ."
   },
   "dependencies": {
-    "better-sqlite3": "^7.4.3",
     "dbd.db": "^1.4.5",
     "esm": "^3.2.25",
     "music-metadata": "^7.11.4",
     "sharp": "^0.29.1",
+    "sql-template-strings": "^2.2.2",
+    "sqlite": "^4.0.23",
     "sqlite3": "^5.0.2",
     "uuid": "^8.3.2"
   }
