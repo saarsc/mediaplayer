@@ -1,7 +1,5 @@
+
 window.api.receive("add-song-to-list", (song) => {
-  if (typeof song.cover !== "string") {
-    console.log(song.cover);
-  }
   const songWrapper = document.createElement("li");
   songWrapper.classList = ["songWrapper"];
 
@@ -23,13 +21,19 @@ window.api.receive("add-song-to-list", (song) => {
   songDetailsWrapper.appendChild(songArtist);
 
   songWrapper.appendChild(songDetailsWrapper);
-  songWrapper.addEventListener("click", () => {
-    var audio = new Audio(song.path);
-    audio.play();
+
+  songWrapper.addEventListener("click", (el) => {
+    const player = document.getElementById("audio_player");
+    const source = document.getElementById("audio_player_source");
+    source.src = song.path;
+    player.load();
+    player.play();
   });
   document.getElementById("songs-list").appendChild(songWrapper);
 });
+
 const $ = document.querySelectorAll;
+
 document.getElementById("add-path").onclick = () => {
   window.api.send("add-path");
 };

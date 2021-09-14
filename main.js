@@ -1,6 +1,5 @@
 ` TODO
   --------------
-  3) ASYNC the file playing 
   4) UI UI UI 
   5) Spotify integration
   6) FS events listeners (https://www.npmjs.com/package/chokidar ?)
@@ -17,6 +16,8 @@ const uuid = require("uuid");
 
 let win;
 const dbmanager = require("./scripts/db_manager");
+
+const upnp_discovery = require("node-upnp-utils");
 /**
  * Generator to list all audio files in a given path
  *
@@ -36,19 +37,25 @@ async function* listFiles(dir) {
     }
   }
 }
+/**
+ * Adds a source folder of songs
+ *
+ */
 const addPath = () => {
   dialog.showOpenDialog({ properties: ["openDirectory"] }).then((result) => {
     (async () => {
       for await (const f of listFiles(result.filePaths[0])) {
         await mm.parseFile(f).then(async (metadata) => {
+          /**
+           *  @type {{title:string,artist:string,album:string,}}
+           */
           const song = {
-            title: metadata.common.title,
-            artist: metadata.common.artist,
-            album: metadata.common.album,
+            title: metadata.common.title.trim(),
+            artist: metadata.common.artist.trim(),
+            album: metadata.common.album.trim(),
             id: uuid.v4(),
             date: metadata.common.date,
             path: f,
-            spotify_id: "",
             cover: metadata.common.picture[0].data,
           };
 
@@ -60,7 +67,33 @@ const addPath = () => {
     })();
   });
 };
-app.whenReady().then(() => {
+
+async function loadSongs() {
+  for await (const song of dbmanager.getAllSongs()) {
+    win.webContents.send("add-song-to-list", song);
+  }
+}
+
+const deviceDiscovery = () => {
+  upnp_discovery.on("added", (device) => {
+    // This callback function will be called whenever an device is found.
+    console.log(device["address"]);
+    console.log(device["description"]["device"]["friendlyName"]);
+    console.log(device["headers"]["LOCATION"]);
+    console.log(device["headers"]["USN"]);
+    console.log("------------------------------------");
+  });
+  upnp_discovery.startDiscovery();
+
+  // Stop the discovery process in 15 seconds
+  setTimeout(() => {
+    upnp_discovery.stopDiscovery(() => {
+      console.log("Stopped the discovery process.");
+      process.exit();
+    });
+  }, 15000);
+};
+app.whenReady().then(async () => {
   win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -70,12 +103,14 @@ app.whenReady().then(() => {
       contextIsolation: true,
     },
   });
-  win.loadFile("index.html");
   win.webContents.openDevTools();
-
+  await dbmanager.loadDB();
+  win.loadFile("index.html");
+  loadSongs();
   ipcMain.on("add-path", () => {
     addPath();
   });
+  deviceDiscovery()
 });
 
 app.on("window-all-closed", function () {

@@ -9,16 +9,20 @@
     "electron-nightly": "^16.0.0-nightly.20210907"
   },
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "test": "qunit"
   },
   "dependencies": {
     "dbd.db": "^1.4.5",
-    "esm": "^3.2.25",
     "music-metadata": "^7.11.4",
+    "node-ssdp": "^4.0.1",
+    "node-upnp-remote": "^1.2.0",
+    "qunit": "^2.17.1",
     "sharp": "^0.29.1",
     "sql-template-strings": "^2.2.2",
     "sqlite": "^4.0.23",
     "sqlite3": "^5.0.2",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "xml2js": "^0.4.23"
   }
 }
