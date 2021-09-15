@@ -70,10 +70,10 @@ const remote = new UPnPRemote({
 remote.play(1);
 
 remote.setURI({
-  // protocolInfo: "http-get:*:audio/mp3:*",
+  protocolInfo: "http-get:*:audio/mp3:*",
   uri: "http://192.168.1.43:8000/Mardy Bum(Glastonbury 2013).mp3",
-//   title: "Alex Turner",
-//   creator: "Alex Turner",
+  title: "Alex Turner",
+  creator: "Alex Turner",
 });
 
 // test();
