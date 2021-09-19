@@ -31,9 +31,16 @@ window.api.receive("add-song-to-list", (song) => {
   });
   document.getElementById("songs-list").appendChild(songWrapper);
 });
+// window.api.receive("spotify-link", (link) => {
+//   debugger;
+//   document.getElementById("login-spotify").href = link;
+// });
 
 const $ = document.querySelectorAll;
 
 document.getElementById("add-path").onclick = () => {
   window.api.send("add-path");
 };
+document.getElementById("login-spotify").onclick = ()=>{
+  window.api.send("login-spotify")
+}

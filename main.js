@@ -6,7 +6,7 @@
   7) UPNP support for speakers
 
 `;
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, session } = require("electron");
 const fs = require("fs");
 
 const path = require("path");
@@ -15,9 +15,12 @@ const mm = require("music-metadata");
 const uuid = require("uuid");
 
 let win;
-const dbmanager = require("./scripts/db_manager");
+const dbmanager = require("./scripts/utils/db_manager");
 
 const upnp_discovery = require("node-upnp-utils");
+
+const spotify = require("./scripts/spotify");
+const storage = require("electron-json-storage");
 /**
  * Generator to list all audio files in a given path
  *
@@ -104,15 +107,42 @@ app.whenReady().then(async () => {
     },
   });
   win.webContents.openDevTools();
+  await win.loadFile("index.html");
   await dbmanager.loadDB();
-  win.loadFile("index.html");
   loadSongs();
   ipcMain.on("add-path", () => {
     addPath();
   });
-  deviceDiscovery()
-});
 
+  ipcMain.on(
+    "login-spotify",
+    () => {
+      const spotifyAuth = new BrowserWindow({
+        width: 800,
+        height: 800,
+        parent: win,
+      });
+      const filter = {
+        urls: ["http://localhost:8080/*"],
+      };
+
+      session.defaultSession.webRequest.onBeforeRequest(filter, (details) => {
+        const url = new URL(details.url);
+
+        storage.set("spotify-token", {
+          "spotify-token": url.searchParams.get("code"),
+        });
+
+        spotifyAuth.close();
+      });
+
+      spotifyAuth.loadURL(spotify.createLink());
+      spotifyAuth.show();
+    }
+    // deviceDiscovery();
+  );
+  console.log(storage.getDefaultDataPath());
+});
 app.on("window-all-closed", function () {
   if (process.platform !== "darwin") app.quit();
 });

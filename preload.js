@@ -7,13 +7,13 @@ window.addEventListener("DOMContentLoaded", () => {
 contextBridge.exposeInMainWorld("api", {
   send: (channel, data) => {
     // whitelist channels
-    let validChannels = ["add-path"];
+    let validChannels = ["add-path","login-spotify"];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
     }
   },
   receive: (channel, func) => {
-    let validChannels = ["add-song-to-list"];
+    let validChannels = ["add-song-to-list", "spotify-link"];
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender`
       ipcRenderer.on(channel, (event, ...args) => func(...args));
