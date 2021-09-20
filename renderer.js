@@ -1,4 +1,3 @@
-
 window.api.receive("add-song-to-list", (song) => {
   const songWrapper = document.createElement("li");
   songWrapper.classList = ["songWrapper"];
@@ -31,16 +30,27 @@ window.api.receive("add-song-to-list", (song) => {
   });
   document.getElementById("songs-list").appendChild(songWrapper);
 });
-// window.api.receive("spotify-link", (link) => {
-//   debugger;
-//   document.getElementById("login-spotify").href = link;
-// });
+window.api.receive("playlists-list", (data) => {
+  const $ul = document.getElementById("playlists-list");
+  data.forEach((playlist) => {
+    const $li = document.createElement("li");
+    $li.innerHTML = playlist.name;
+    $li.id = playlist.id;
+    $li.onclick = () => {
+      window.api.send("get-playlist-songs", $li.id);
+    };
+    $ul.appendChild($li);
+  });
+});
 
-const $ = document.querySelectorAll;
+const $ = document.querySelector.bind( document );
 
-document.getElementById("add-path").onclick = () => {
+$("#add-path").onclick = () => {
   window.api.send("add-path");
 };
-document.getElementById("login-spotify").onclick = ()=>{
-  window.api.send("login-spotify")
-}
+$("#login-spotify").onclick = () => {
+  window.api.send("login-spotify");
+};
+$("#show-playlists").onclick = () => {
+  window.api.send("get-playlists");
+};

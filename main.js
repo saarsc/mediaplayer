@@ -2,9 +2,12 @@
   --------------
   4) UI UI UI 
   5) Spotify integration
-  6) FS events listeners (https://www.npmjs.com/package/chokidar ?)
-  7) UPNP support for speakers
-
+  6) FS events listeners (https://www.npmjs.com/package/chokidar ?) to see when files are added / changed / removed
+  7) UPNP support for speakers:
+    a) Discovery : Kinda Working
+    b) Actions: not working
+  8) handle out of date spotify token
+  9) handle changing from local file to spotify and back 
 `;
 const { app, BrowserWindow, dialog, ipcMain, session } = require("electron");
 const fs = require("fs");
@@ -96,6 +99,37 @@ const deviceDiscovery = () => {
     });
   }, 15000);
 };
+ipcMain.on(
+  "login-spotify",
+  () => {
+    const spotifyAuth = new BrowserWindow({
+      width: 800,
+      height: 800,
+      parent: win,
+    });
+    const filter = {
+      urls: ["http://localhost:8080/*"],
+    };
+
+    session.defaultSession.webRequest.onBeforeRequest(filter, (details) => {
+      const url = new URL(details.url);
+
+      spotify.connect(url.searchParams.get("code"));
+      spotifyAuth.close();
+    });
+
+    spotifyAuth.loadURL(spotify.createLink());
+    spotifyAuth.show();
+  }
+  // deviceDiscovery();
+);
+ipcMain.on("add-path", () => {
+  addPath();
+});
+ipcMain.on("get-playlists", () => {
+  win.webContents.send("playlists-list", spotify.getPlaylists());
+});
+
 app.whenReady().then(async () => {
   win = new BrowserWindow({
     width: 800,
@@ -110,39 +144,9 @@ app.whenReady().then(async () => {
   await win.loadFile("index.html");
   await dbmanager.loadDB();
   loadSongs();
-  ipcMain.on("add-path", () => {
-    addPath();
-  });
-
-  ipcMain.on(
-    "login-spotify",
-    () => {
-      const spotifyAuth = new BrowserWindow({
-        width: 800,
-        height: 800,
-        parent: win,
-      });
-      const filter = {
-        urls: ["http://localhost:8080/*"],
-      };
-
-      session.defaultSession.webRequest.onBeforeRequest(filter, (details) => {
-        const url = new URL(details.url);
-
-        storage.set("spotify-token", {
-          "spotify-token": url.searchParams.get("code"),
-        });
-
-        spotifyAuth.close();
-      });
-
-      spotifyAuth.loadURL(spotify.createLink());
-      spotifyAuth.show();
-    }
-    // deviceDiscovery();
-  );
-  console.log(storage.getDefaultDataPath());
+  spotify.connect();
 });
+
 app.on("window-all-closed", function () {
   if (process.platform !== "darwin") app.quit();
 });
