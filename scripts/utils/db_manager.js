@@ -69,7 +69,7 @@ const getAlbumCover = async (name, artist, cover) => {
  * @param {string} song.date date the song was released
  * @param {string} song.path local path for the song
  * @param {string} song.cover cover art of the song
- *
+ *  
  */
 async function* writeToDB(song) {
   // open the database

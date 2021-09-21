@@ -7,7 +7,12 @@ window.addEventListener("DOMContentLoaded", () => {
 contextBridge.exposeInMainWorld("api", {
   send: (channel, data) => {
     // whitelist channels
-    let validChannels = ["add-path", "login-spotify", "get-playlists"];
+    let validChannels = [
+      "add-path",
+      "login-spotify",
+      "get-playlists",
+      "get-playlist-songs",
+    ];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
     }

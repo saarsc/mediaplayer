@@ -49,12 +49,10 @@ async function* listFiles(dir) {
  */
 const addPath = () => {
   dialog.showOpenDialog({ properties: ["openDirectory"] }).then((result) => {
+    // Lists the files in the subdirectories
     (async () => {
       for await (const f of listFiles(result.filePaths[0])) {
         await mm.parseFile(f).then(async (metadata) => {
-          /**
-           *  @type {{title:string,artist:string,album:string,}}
-           */
           const song = {
             title: metadata.common.title.trim(),
             artist: metadata.common.artist.trim(),
@@ -64,7 +62,6 @@ const addPath = () => {
             path: f,
             cover: metadata.common.picture[0].data,
           };
-
           for await (const s of dbmanager.writeToDB(song)) {
             win.webContents.send("add-song-to-list", s);
           }
@@ -73,7 +70,9 @@ const addPath = () => {
     })();
   });
 };
-
+/**
+ * When the program launches load all the songs from the DB
+ */
 async function loadSongs() {
   for await (const song of dbmanager.getAllSongs()) {
     win.webContents.send("add-song-to-list", song);
@@ -99,6 +98,11 @@ const deviceDiscovery = () => {
     });
   }, 15000);
 };
+
+/**
+ * Handles the login process to spotify
+ * 
+ */
 ipcMain.on(
   "login-spotify",
   () => {
@@ -110,7 +114,7 @@ ipcMain.on(
     const filter = {
       urls: ["http://localhost:8080/*"],
     };
-
+    // Grabs the access code from the redirect 
     session.defaultSession.webRequest.onBeforeRequest(filter, (details) => {
       const url = new URL(details.url);
 
@@ -121,19 +125,45 @@ ipcMain.on(
     spotifyAuth.loadURL(spotify.createLink());
     spotifyAuth.show();
   }
-  // deviceDiscovery();
 );
+
+
+
+/**
+ * ---------------------------------------------------------
+ *                  RENDERER CALLS
+ * ---------------------------------------------------------
+ */
+/**
+ * Handles the add folder call
+ */
 ipcMain.on("add-path", () => {
   addPath();
 });
-ipcMain.on("get-playlists", () => {
-  win.webContents.send("playlists-list", spotify.getPlaylists());
+/**
+ * Handles the list playlists call
+ */
+ipcMain.on("get-playlists", async () => {
+  win.webContents.send("playlists-list", await spotify.getPlaylists());
 });
+/**
+ * Handles the list playlists songs call
+ */
+ipcMain.on("get-playlist-songs", async (_, id) => {
+  console.log(await spotify.listPlayListSongs(id));
+});
+/**
+ * ---------------------------------------------------------
+ *                 END OF RENDERER CALLS
+ * ---------------------------------------------------------
+ */
+
+
 
 app.whenReady().then(async () => {
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1000,
+    height: 1000,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
