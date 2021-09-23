@@ -147,7 +147,9 @@ ipcMain.on("get-playlists", async () => {
 ipcMain.on("get-playlist-songs", async (_, id) => {
   const songs = await spotify.listPlayListSongs(id);
   for (const song of songs) {
-    dbmanager.writeToDB(song);
+    for await (const s of dbmanager.writeToDB(song)) {
+      win.webContents.send("add-song-to-list", s);
+    }
   }
 });
 /**

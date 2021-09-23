@@ -14,12 +14,11 @@ const loadDB = async () => {
     driver: sqlite3.Database,
   });
   await db.run(
-    `CREATE TABLE IF NOT EXISTS ${SONGS_TABLE} ('primkey' INTEGER PRIMARY KEY, 'title' TEXT, 'artist' TEXT, 'album' TEXT, 'id' TEXT, 'date' DATE, 'path' TEXT, 'playlist' TEXT)`
+    `CREATE TABLE IF NOT EXISTS ${SONGS_TABLE} ('primkey' INTEGER PRIMARY KEY, 'title' TEXT, 'artist' TEXT, 'album' TEXT, 'id' TEXT, 'date' DATE, 'path' TEXT)`
   );
   await db.run(
     `CREATE TABLE IF NOT EXISTS ${ALBUMS_TABLE} ('primkey' INTEGER PRIMARY KEY, 'name' TEXT, 'artist' TEXT, 'cover' TEXT)`
   );
-
 };
 /**
  * @function
@@ -79,7 +78,16 @@ async function* writeToDB(song) {
   if (
     !(await db.get(`SELECT path from ${SONGS_TABLE} WHERE path = ?`, song.path))
   ) {
-    
+    if (song.path.startsWith("http")) {
+      if (
+        await db.get(
+          `SELECT * from ${SONGS_TABLE} where artist = ? AND title = ? AND album = ?`,
+          [song.artist, song.title, song.album]
+        )
+      ) {
+        return;
+      }
+    }
     await db.run(
       `INSERT INTO ${SONGS_TABLE} (title,artist,album,id,date,path,spotify_id) VALUES (?,?,?,?,?,?,"")`,
       [song.title, song.artist, song.album, song.id, song.date, song.path]

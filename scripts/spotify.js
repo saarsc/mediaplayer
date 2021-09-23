@@ -1,7 +1,7 @@
 const SpotifyWebApi = require("spotify-web-api-node");
 const spotifyCreds = require("./utils/spotify_creds");
 const stoarge = require("electron-json-storage");
-const got = require("got");
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 // General Spotify object
 const spotifyApi = new SpotifyWebApi({
   clientId: spotifyCreds.CLIENT_ID,
@@ -101,9 +101,7 @@ const listPlayListSongs = async (id, offset) => {
                 title: info.name,
                 path: info.href,
                 album: info.album.name,
-                cover: await got(info.album.images[0].url, {
-                  responseType: "buffer",
-                }).body,
+                cover: await fetch(info.album.images[0].url).then((r)=>r.buffer())
               };
               songs.push(parsedSong);
               resolve(parsedSong);
