@@ -101,33 +101,28 @@ const deviceDiscovery = () => {
 
 /**
  * Handles the login process to spotify
- * 
+ *
  */
-ipcMain.on(
-  "login-spotify",
-  () => {
-    const spotifyAuth = new BrowserWindow({
-      width: 800,
-      height: 800,
-      parent: win,
-    });
-    const filter = {
-      urls: ["http://localhost:8080/*"],
-    };
-    // Grabs the access code from the redirect 
-    session.defaultSession.webRequest.onBeforeRequest(filter, (details) => {
-      const url = new URL(details.url);
+ipcMain.on("login-spotify", () => {
+  const spotifyAuth = new BrowserWindow({
+    width: 800,
+    height: 800,
+    parent: win,
+  });
+  const filter = {
+    urls: ["http://localhost:8080/*"],
+  };
+  // Grabs the access code from the redirect
+  session.defaultSession.webRequest.onBeforeRequest(filter, (details) => {
+    const url = new URL(details.url);
 
-      spotify.connect(url.searchParams.get("code"));
-      spotifyAuth.close();
-    });
+    spotify.connect(url.searchParams.get("code"));
+    spotifyAuth.close();
+  });
 
-    spotifyAuth.loadURL(spotify.createLink());
-    spotifyAuth.show();
-  }
-);
-
-
+  spotifyAuth.loadURL(spotify.createLink());
+  spotifyAuth.show();
+});
 
 /**
  * ---------------------------------------------------------
@@ -150,15 +145,16 @@ ipcMain.on("get-playlists", async () => {
  * Handles the list playlists songs call
  */
 ipcMain.on("get-playlist-songs", async (_, id) => {
-  console.log(await spotify.listPlayListSongs(id));
+  const songs = await spotify.listPlayListSongs(id);
+  for (const song of songs) {
+    dbmanager.writeToDB(song);
+  }
 });
 /**
  * ---------------------------------------------------------
  *                 END OF RENDERER CALLS
  * ---------------------------------------------------------
  */
-
-
 
 app.whenReady().then(async () => {
   win = new BrowserWindow({

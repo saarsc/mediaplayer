@@ -5,6 +5,7 @@ const sqlite3 = require("sqlite3").verbose();
 
 const SONGS_TABLE = "songs";
 const ALBUMS_TABLE = "albums";
+const SPOTIFY_TABLE = "albums";
 let db;
 
 const loadDB = async () => {
@@ -13,11 +14,12 @@ const loadDB = async () => {
     driver: sqlite3.Database,
   });
   await db.run(
-    `CREATE TABLE IF NOT EXISTS ${SONGS_TABLE} ('primkey' INTEGER PRIMARY KEY, 'title' TEXT, 'artist' TEXT, 'album' TEXT, 'id' TEXT, 'date' DATE, 'path' TEXT, 'spotify_id' TEXT)`
+    `CREATE TABLE IF NOT EXISTS ${SONGS_TABLE} ('primkey' INTEGER PRIMARY KEY, 'title' TEXT, 'artist' TEXT, 'album' TEXT, 'id' TEXT, 'date' DATE, 'path' TEXT, 'playlist' TEXT)`
   );
   await db.run(
     `CREATE TABLE IF NOT EXISTS ${ALBUMS_TABLE} ('primkey' INTEGER PRIMARY KEY, 'name' TEXT, 'artist' TEXT, 'cover' TEXT)`
   );
+
 };
 /**
  * @function
@@ -69,7 +71,7 @@ const getAlbumCover = async (name, artist, cover) => {
  * @param {string} song.date date the song was released
  * @param {string} song.path local path for the song
  * @param {string} song.cover cover art of the song
- *  
+ *
  */
 async function* writeToDB(song) {
   // open the database
@@ -77,6 +79,7 @@ async function* writeToDB(song) {
   if (
     !(await db.get(`SELECT path from ${SONGS_TABLE} WHERE path = ?`, song.path))
   ) {
+    
     await db.run(
       `INSERT INTO ${SONGS_TABLE} (title,artist,album,id,date,path,spotify_id) VALUES (?,?,?,?,?,?,"")`,
       [song.title, song.artist, song.album, song.id, song.date, song.path]

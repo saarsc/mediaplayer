@@ -1,7 +1,7 @@
 const SpotifyWebApi = require("spotify-web-api-node");
 const spotifyCreds = require("./utils/spotify_creds");
 const stoarge = require("electron-json-storage");
-
+const got = require("got");
 // General Spotify object
 const spotifyApi = new SpotifyWebApi({
   clientId: spotifyCreds.CLIENT_ID,
@@ -81,28 +81,40 @@ const getPlaylists = async () => {
  * @returns {Array} Array of objects containing the playlists songs info
  */
 const listPlayListSongs = async (id, offset) => {
+
+  let songs = [];
   if (!offset) {
     offset = 0;
   }
-  let songs = [];
   let totalSongs;
   do {
-    await spotifyApi.getPlaylistTracks(id, { offset: offset }).then((data) => {
-      data.body.items.forEach((song) => {
-        const info = song.track;
-        songs.push({
-          artist: info.artists[0].name,
-          id: info.id,
-          name: info.name,
-          link: info.href,
-          album: info.album.name,
-          cover: info.album.images[0].url,
-        });
+    await spotifyApi
+      .getPlaylistTracks(id, { offset: offset })
+      .then(async (data) => {
+        await Promise.all(
+          data.body.items.map(async (song) => {
+            await new Promise(async (resolve) => {
+              const info = song.track;
+              const parsedSong = {
+                artist: info.artists[0].name,
+                id: info.id,
+                title: info.name,
+                path: info.href,
+                album: info.album.name,
+                cover: await got(info.album.images[0].url, {
+                  responseType: "buffer",
+                }).body,
+              };
+              songs.push(parsedSong);
+              resolve(parsedSong);
+            });
+          })
+        );
+        totalSongs = data.body.total;
       });
-      totalSongs = data.body.total;
-    });
     offset += 100;
   } while (offset < totalSongs);
+
   return songs;
 };
 module.exports = {
