@@ -6,7 +6,8 @@
   "author": "ME",
   "license": "MIT",
   "devDependencies": {
-    "electron-nightly": "^16.0.0-nightly.20210907"
+    "electron-nightly": "^16.0.0-nightly.20210907",
+    "electron-reloader": "^1.2.1"
   },
   "scripts": {
     "start": "electron .",

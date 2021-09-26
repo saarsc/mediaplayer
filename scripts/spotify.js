@@ -1,7 +1,8 @@
 const SpotifyWebApi = require("spotify-web-api-node");
 const spotifyCreds = require("./utils/spotify_creds");
 const stoarge = require("electron-json-storage");
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 // General Spotify object
 const spotifyApi = new SpotifyWebApi({
   clientId: spotifyCreds.CLIENT_ID,
@@ -81,7 +82,6 @@ const getPlaylists = async () => {
  * @returns {Array} Array of objects containing the playlists songs info
  */
 const listPlayListSongs = async (id, offset) => {
-
   let songs = [];
   if (!offset) {
     offset = 0;
@@ -101,7 +101,9 @@ const listPlayListSongs = async (id, offset) => {
                 title: info.name,
                 path: info.href,
                 album: info.album.name,
-                cover: await fetch(info.album.images[0].url).then((r)=>r.buffer())
+                cover: await fetch(info.album.images[0].url).then((r) =>
+                  r.buffer()
+                ),
               };
               songs.push(parsedSong);
               resolve(parsedSong);
@@ -115,6 +117,14 @@ const listPlayListSongs = async (id, offset) => {
 
   return songs;
 };
+const listDevices = async () => {
+  return await spotifyApi.getMyDevices().then((data) => {
+    return data.body.devices.map((device) => {
+      return { name: device.name, id: device.id };
+    });
+  });
+};
+
 module.exports = {
   createLink,
   getPlaylists,

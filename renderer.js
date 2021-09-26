@@ -1,3 +1,74 @@
+let isPlaying = false;
+const $ = document.querySelector.bind(document);
+let timer;
+
+const initSong = (path, artist, cover, title) => {
+  isPlaying = false;
+  let audio = $("#music");
+  if (!audio) {
+    audio = new Audio();
+    audio.id = "music";
+    document.body.appendChild(audio);
+  }
+  if (path.startsWith("http")) {
+    // HANDLE SPOTIFY
+  } else {
+    audio.src = path;
+    const progressBar = $("#length");
+    progressBar.style.transition = "none";
+    progressBar.style.width = "0%";
+    audio.currentTime = 0;
+    $(".music-player__title").innerHTML = title;
+    $(".music-player__author").innerHTML = artist;
+    cover.src = `data:image/png;base64,${cover}`;
+
+    audio.addEventListener("loadedmetadata", () => {
+      let leftMinute = Math.floor(audio.duration / 60);
+      let leftSecond = Math.floor(audio.duration % 60);
+      $(".music-time__current").innerHTML = "00:00";
+      $(".music-time__last").innerHTML =
+        ("0" + leftMinute).substr(-2) + ":" + ("0" + leftSecond).substr(-2);
+      progressBar.style.transition = "";
+    });
+    play();
+  }
+};
+
+const play = () => {
+  if (!isPlaying) {
+    isPlaying = true;
+    $("#music").play();
+    $(".play").innerHTML = "⏸";
+    timer = setInterval(changeBar, 500);
+  } else {
+    $("#music").pause();
+    $(".play").innerHTML = "⏵";
+    isPlaying = false;
+    clearInterval(timer);
+  }
+};
+const changeBar = () => {
+  const audio = $("#music");
+  const percentage = (audio.currentTime / audio.duration).toFixed(3);
+  $("#length").style.transition = "";
+
+  //set current time
+  const minute = Math.floor(audio.currentTime / 60);
+  const second = Math.floor(audio.currentTime % 60);
+  const leftTime = audio.duration - audio.currentTime;
+  $(".music-time__current").innerHTML =
+    ("0" + minute).substr(-2) + ":" + ("0" + second).substr(-2);
+
+  //set left time
+  var leftMinute = Math.floor(leftTime / 60);
+  var leftSecond = Math.floor(leftTime % 60);
+
+  $(".music-time__last").innerHTML =
+    ("0" + leftMinute).substr(-2) + ":" + ("0" + leftSecond).substr(-2);
+
+  //set time bar
+  $("#length").style.width = percentage * 100 + "%";
+};
 /**
  * ---------------------------------------------------------
  *                  MAIN CALLS
@@ -41,11 +112,7 @@ window.api.receive(
     songWrapper.appendChild(songDetailsWrapper);
 
     songWrapper.addEventListener("click", (el) => {
-      const player = document.getElementById("audio_player");
-      const source = document.getElementById("audio_player_source");
-      source.src = song.path;
-      player.load();
-      player.play();
+      initSong(song.path, song.artist, song.cover, song.title);
     });
     document.getElementById("songs-list").appendChild(songWrapper);
   }
@@ -78,8 +145,9 @@ window.api.receive(
  *                END OF MAIN CALLS
  * ---------------------------------------------------------
  */
-const $ = document.querySelector.bind(document);
-
+$("#play").onclick = () => {
+  play();
+};
 $("#add-path").onclick = () => {
   window.api.send("add-path");
 };

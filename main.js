@@ -6,7 +6,7 @@
   7) UPNP support for speakers:
     a) Discovery : Kinda Working
     b) Actions: not working
-  8) handle out of date spotify token
+  8) Add spotify song length to db to  prevent extra rquests to the API 
   9) handle changing from local file to spotify and back 
 `;
 const { app, BrowserWindow, dialog, ipcMain, session } = require("electron");
@@ -24,6 +24,9 @@ const upnp_discovery = require("node-upnp-utils");
 
 const spotify = require("./scripts/spotify");
 const storage = require("electron-json-storage");
+// try {
+// 	require('electron-reloader')(module);
+// } catch {}
 /**
  * Generator to list all audio files in a given path
  *
@@ -172,7 +175,7 @@ app.whenReady().then(async () => {
   await win.loadFile("index.html");
   await dbmanager.loadDB();
   loadSongs();
-  spotify.connect();
+  // spotify.connect();
 });
 
 app.on("window-all-closed", function () {
