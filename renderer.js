@@ -113,6 +113,7 @@ window.api.receive(
 
     songWrapper.addEventListener("click", (el) => {
       initSong(song.path, song.artist, song.cover, song.title);
+      window.api.send("selected-song", song.id);
     });
     document.getElementById("songs-list").appendChild(songWrapper);
   }

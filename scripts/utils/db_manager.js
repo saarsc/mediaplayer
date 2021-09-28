@@ -109,8 +109,13 @@ async function* getAllSongs() {
     yield song;
   }
 }
+const generateQueue = async (album) => {
+  const songs = await db.all(`SELECT id FROM ${SONGS_TABLE}`);
+  return songs.map((song) =>song.id);
+};
 module.exports = {
   writeToDB,
   getAllSongs,
   loadDB,
+  generateQueue,
 };

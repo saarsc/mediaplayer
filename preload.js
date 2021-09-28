@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld("api", {
       "login-spotify",
       "get-playlists",
       "get-playlist-songs",
+      "selected-song",
     ];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);

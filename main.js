@@ -23,10 +23,15 @@ const dbmanager = require("./scripts/utils/db_manager");
 const upnp_discovery = require("node-upnp-utils");
 
 const spotify = require("./scripts/spotify");
-const storage = require("electron-json-storage");
+
+const Queue = require("./scripts/utils/queue");
+
+let queue;
+
 // try {
 // 	require('electron-reloader')(module);
 // } catch {}
+
 /**
  * Generator to list all audio files in a given path
  *
@@ -155,6 +160,10 @@ ipcMain.on("get-playlist-songs", async (_, id) => {
     }
   }
 });
+ipcMain.on("selected-song", (_, id) => {
+  queue.jumpToSong(id);
+  console.log(queue.queue);
+});
 /**
  * ---------------------------------------------------------
  *                 END OF RENDERER CALLS
@@ -174,6 +183,7 @@ app.whenReady().then(async () => {
   win.webContents.openDevTools();
   await win.loadFile("index.html");
   await dbmanager.loadDB();
+  queue= new Queue();
   loadSongs();
   // spotify.connect();
 });
