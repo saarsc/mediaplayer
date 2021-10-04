@@ -30,6 +30,9 @@ const initSong = (path, artist, cover, title) => {
         ("0" + leftMinute).substr(-2) + ":" + ("0" + leftSecond).substr(-2);
       progressBar.style.transition = "";
     });
+    audio.onended = () => {
+      window.api.send("next-song");
+    };
     play();
   }
 };

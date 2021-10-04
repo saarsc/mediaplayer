@@ -11,6 +11,7 @@
       content="default-src 'self'; script-src 'self'"
     />
     <link href="./styles/audioplayer.css" rel="stylesheet" />
+    <link href="./styles/music_section.css" rel="stylesheet" />
     <title>Hello World!</title>
   </head>
   <body>
@@ -18,7 +19,9 @@
     <button id="add-path">Add Folder</button>
     <button id="login-spotify">Connect Spotify Account</button>
     <button id="show-playlists">Lists playlists</button>
-    <ul id="playlists-list"></ul>
+    <section>
+      <ul id="playlists-list"></ul>
+    </section>
     <!-- <audio id="audio_player" controls="controls">
       <source id="audio_player_source" src="" />
     </audio> -->
@@ -39,8 +42,10 @@
           </button>
         </section>
         <section class="music-player">
-          <h1 class="music-player__title"></h1>
-          <h2 class="music-player__author"></h2>
+          <div class="now-playing-info">
+            <h1 class="music-player__title"></h1>
+            <h2 class="music-player__author"></h2>
+          </div>
           <div class="music-time">
             <p class="music-time__current"></p>
             <p class="music-time__last"></p>

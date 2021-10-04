@@ -9,6 +9,7 @@
   8) Add spotify song length to db to  prevent extra rquests to the API 
   9) handle changing from local file to spotify and back 
   10) Add Album context to enable full album playback(or just keep on per song bases as it is ATM)
+  11) Album / Artist View 
 `;
 const { app, BrowserWindow, dialog, ipcMain, session } = require("electron");
 const fs = require("fs");

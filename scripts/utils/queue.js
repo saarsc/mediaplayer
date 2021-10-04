@@ -64,14 +64,17 @@ const Queue = class {
     return songInfo;
   }
   async prev() {
-    return await dbManager.getSongInfo(this.queue[Math.max(--this.loc, 0)]);
+    const songInfo = await dbManager.getSongInfo(
+      this.queue[Math.max(--this.loc, 0)]
+    );
+    return;
   }
   async play(song) {
     if (song.spotify_id === "") {
       song.spotify_id = await spotify.getTrackId(song);
-      // dbManager.updateSpotifyId(song);
+      dbManager.updateSpotifyId(song);
     }
-    // spotify.play(song.id === song.spotify_id, song.spotify_id);
+    spotify.play(song.id === song.spotify_id, song.spotify_id);
   }
 };
 

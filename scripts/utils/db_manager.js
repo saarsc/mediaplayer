@@ -107,7 +107,7 @@ const updateSpotifyId = async (song) => {
   ) {
     db.run(
       `UPDATE ${SONGS_TABLE} SET spotify_id = ? WHERE UPPER(artist) = UPPER(?) AND UPPER(title) = UPPER(?) AND UPPER(album) = UPPER(?)`,
-      [song.id, song.artist, song.title, song.album]
+      [song.spotify_id, song.artist, song.title, song.album]
     );
   }
 };
