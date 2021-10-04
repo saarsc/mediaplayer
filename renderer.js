@@ -20,7 +20,7 @@ const initSong = (path, artist, cover, title) => {
     audio.currentTime = 0;
     $(".music-player__title").innerHTML = title;
     $(".music-player__author").innerHTML = artist;
-    cover.src = `data:image/png;base64,${cover}`;
+    $(".cover").src = `data:image/png;base64,${cover}`;
 
     audio.addEventListener("loadedmetadata", () => {
       let leftMinute = Math.floor(audio.duration / 60);
@@ -38,11 +38,11 @@ const play = () => {
   if (!isPlaying) {
     isPlaying = true;
     $("#music").play();
-    $(".play").innerHTML = "⏸";
+    $(".play").innerHTML = "pause";
     timer = setInterval(changeBar, 500);
   } else {
     $("#music").pause();
-    $(".play").innerHTML = "⏵";
+    $(".play").innerHTML = "play_arrow";
     isPlaying = false;
     clearInterval(timer);
   }
@@ -112,6 +112,13 @@ window.api.receive(
     songWrapper.appendChild(songDetailsWrapper);
 
     songWrapper.addEventListener("click", (el) => {
+      let $el = el.target;
+      if ($el.tagName.toLowerCase() !== "li") {
+        $el.parentElement.tagName.toLowerCase() === "li"
+          ? ($el = $el.parentElement)
+          : ($el = $el.parentElement.parentElement);
+      }
+      $el.classList.toggle("active");
       initSong(song.path, song.artist, song.cover, song.title);
       window.api.send("selected-song", song.id);
     });
@@ -141,14 +148,47 @@ window.api.receive(
     });
   }
 );
+
+window.api.receive("song-info", (song) => {
+  initSong(song.path, song.artist, song.cover, song.title);
+});
 /**
  * ---------------------------------------------------------
  *                END OF MAIN CALLS
  * ---------------------------------------------------------
  */
+/**
+ * ---------------------------------------------------------
+ *                MEDIA CONTROLS
+ * ---------------------------------------------------------
+ */
 $("#play").onclick = () => {
   play();
 };
+$("#next").onclick = () => {
+  window.api.send("next-song");
+};
+$("#prev").onclick = () => {
+  window.api.send("prev-song");
+};
+$("#shuffle").onclick = () => {
+  const el = $("#shuffle span");
+  let state;
+  if (el.innerHTML === "shuffle") {
+    el.innerHTML = "shuffle_on";
+    state = true;
+  } else {
+    el.innerHTML = "shuffle";
+    state = false;
+  }
+  const active_id = $(".active").id;
+  window.api.send("toggle-shuffle", [state, active_id]);
+};
+/**
+ * ---------------------------------------------------------
+ *                END OF MEDIA CONTROLS
+ * ---------------------------------------------------------
+ */
 $("#add-path").onclick = () => {
   window.api.send("add-path");
 };

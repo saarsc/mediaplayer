@@ -17,6 +17,7 @@
     "dbd.db": "^1.4.5",
     "electron-json-storage": "^4.5.0",
     "hpagent": "^0.1.2",
+    "material-icons": "^1.5.1",
     "music-metadata": "^7.11.4",
     "node-fetch": "^3.0.0",
     "node-ssdp": "^4.0.1",

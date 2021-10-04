@@ -33,7 +33,7 @@ const connect = (access) => {
   if (access) {
     // Retrieve an access token and a refresh token
     spotifyApi.authorizationCodeGrant(access).then(
-      function (data) {
+      (data) => {
         console.log("The refresh token is " + data.body["refresh_token"]);
 
         // Set the access token on the API object to use it in later calls
@@ -50,7 +50,7 @@ const connect = (access) => {
     const refresh_token = stoarge.getSync("spotify")["token"];
     if (refresh_token) {
       spotifyApi.setRefreshToken(refresh_token);
-      spotifyApi.refreshAccessToken().then((data) => {
+      spotifyApi.refreshAccessToken().then(async (data) => {
         tokenExperition = data.body["expires_in"];
         spotifyApi.setAccessToken(data.body["access_token"]);
       });
@@ -117,10 +117,46 @@ const listPlayListSongs = async (id, offset) => {
 
   return songs;
 };
+const getTrackId = async (song) => {
+  const songs = (
+    await spotifyApi.searchTracks(
+      `track: ${song.title} artist:${song.artist} album:${song.album}`
+    )
+  ).body.tracks.items;
+  // Filtering songs to fit by track name (Most of the times live songs should a uniqe title )
+  for (let s of songs) {
+    if (
+      s.name.toLocaleLowerCase() === song.title.toLocaleLowerCase() &&
+      s.album.name.toLocaleLowerCase() === song.album.toLocaleLowerCase()
+    ) {
+      return s.id;
+    }
+  }
+  return "local";
+};
+const play = (spotifyOnly, id, toggle) => {
+  if (!toggle) {
+    spotifyApi.play({
+      uris: [`spotify:track:${id}`],
+      // Pull it from the settings later
+      device_id: "3c7a1de25f93d1361da7301bf172aa56725f6c04",
+    });
+  } else {
+    if (id === "local") {
+    } else {
+      if (spotifyOnly) {
+        // Handle setting volume and 'setting focus' on spotify
+      }
+      spotifyApi.play();
+    }
+    // Figure out a way to resume the music on Spotify(Not on change but on pause resume id is not being transferd
+  }
+  
+};
 const listDevices = async () => {
   return await spotifyApi.getMyDevices().then((data) => {
     return data.body.devices.map((device) => {
-      return { name: device.name, id: device.id };
+      return { name: device.name, id: device.id, volme: device.volume_percent };
     });
   });
 };
@@ -130,4 +166,6 @@ module.exports = {
   getPlaylists,
   connect,
   listPlayListSongs,
+  getTrackId,
+  play,
 };

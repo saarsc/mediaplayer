@@ -1,23 +1,24 @@
 const dbManager = require("./db_manager");
 const storage = require("electron-json-storage");
+const spotify = require("../spotify");
 /**
  * @class
  *
- * @param {boolean} suffle
+ * @param {boolean} shuffle
  *
- * @property {boolean} suffle
+ * @property {boolean} shuffle
  * @property {Array} queue
  * @property {number} loc
  *
  */
 const Queue = class {
-  constructor(suffle = false) {
-    this.suffle = suffle;
+  constructor(shuffle = false) {
+    this.shuffle = shuffle;
     this.queue;
     this.loc = 0;
     this.generateQueue();
   }
-  #suffleQueue() {
+  #shuffleQueue() {
     for (let i = this.queue.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [this.queue[i], this.queue[j]] = [this.queue[j], this.queue[i]];
@@ -25,11 +26,12 @@ const Queue = class {
   }
   async generateQueue(id) {
     const savedData = storage.getSync("queue");
+
     if (!savedData["queue"]) {
       this.queue = await dbManager.generateQueue();
-      if (this.suffle) {
-        const selectedSong = this.queue.splice(this.queue.indexOf(id), 1);
-        this.#suffleQueue();
+      if (this.shuffle) {
+        const selectedSong = this.queue.splice(this.queue.indexOf(id), 1)[0];
+        this.#shuffleQueue();
         this.queue.unshift(selectedSong);
       }
       this.jumpToSong(id);
@@ -39,22 +41,37 @@ const Queue = class {
       this.loc = savedData["loc"];
     }
   }
-  set shuffle(state) {
+  async updateShuffle(state, id) {
     this.shuffle = state;
+    storage.set("queue", { queue: "", loc: "" }, () => {
+      this.generateQueue(id);
+    });
   }
 
-  jumpToSong(id) {
+  async jumpToSong(id) {
     if (id) {
       this.loc = this.queue.indexOf(id);
     } else {
       this.loc = 0;
     }
+    this.play(await dbManager.getSongInfo(id));
   }
-  next() {
-    return this.queue[Math.min(++this.loc, this.queue.length - 1)];
+  async next() {
+    const songInfo = await dbManager.getSongInfo(
+      this.queue[Math.min(++this.loc, this.queue.length - 1)]
+    );
+    this.play(songInfo);
+    return songInfo;
   }
-  prev() {
-    return this.queue[Math.max(--this.loc, 0)];
+  async prev() {
+    return await dbManager.getSongInfo(this.queue[Math.max(--this.loc, 0)]);
+  }
+  async play(song) {
+    if (song.spotify_id === "") {
+      song.spotify_id = await spotify.getTrackId(song);
+      // dbManager.updateSpotifyId(song);
+    }
+    // spotify.play(song.id === song.spotify_id, song.spotify_id);
   }
 };
 

@@ -8,6 +8,7 @@
     b) Actions: not working
   8) Add spotify song length to db to  prevent extra rquests to the API 
   9) handle changing from local file to spotify and back 
+  10) Add Album context to enable full album playback(or just keep on per song bases as it is ATM)
 `;
 const { app, BrowserWindow, dialog, ipcMain, session } = require("electron");
 const fs = require("fs");
@@ -164,6 +165,17 @@ ipcMain.on("selected-song", (_, id) => {
   queue.jumpToSong(id);
   console.log(queue.queue);
 });
+
+ipcMain.on("next-song", async () => {
+  win.webContents.send("song-info", await queue.next());
+});
+ipcMain.on("prev-song", async () => {
+  win.webContents.send("song-info", await queue.prev());
+});
+ipcMain.on("toggle-shuffle", async (_, data) => {
+  await queue.updateShuffle(data[0], data[1]);
+  console.log(queue.queue);
+});
 /**
  * ---------------------------------------------------------
  *                 END OF RENDERER CALLS
@@ -183,9 +195,9 @@ app.whenReady().then(async () => {
   win.webContents.openDevTools();
   await win.loadFile("index.html");
   await dbmanager.loadDB();
-  queue= new Queue();
+  queue = new Queue();
   loadSongs();
-  // spotify.connect();
+  spotify.connect();
 });
 
 app.on("window-all-closed", function () {
