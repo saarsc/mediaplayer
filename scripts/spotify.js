@@ -151,7 +151,6 @@ const play = (spotifyOnly, id, toggle) => {
     }
     // Figure out a way to resume the music on Spotify(Not on change but on pause resume id is not being transferd
   }
-  
 };
 const listDevices = async () => {
   return await spotifyApi.getMyDevices().then((data) => {
